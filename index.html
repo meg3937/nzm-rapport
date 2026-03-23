@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BNI — Rapport NZM-2035</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #04080a;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px 16px;
+  }
+  .bnidoc {
+    background: #080d10;
+    color: #a8d8c8;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    border: 1px solid #1a3a30;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 960px;
+  }
+  .scan-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #1dffa0 40%, transparent);
+    opacity: 0.15;
+    animation: scan 6s linear infinite;
+    pointer-events: none;
+    z-index: 10;
+  }
+  @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+  .header-bar {
+    background: #050c0e;
+    border-bottom: 1px solid #0f3028;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1dffa0;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+  .header-logo span { color: #3a6a5a; }
+  .header-meta { text-align: right; color: #3a6a5a; font-size: 10px; line-height: 1.6; }
+  .header-meta .stamp { color: #ff4040; font-size: 11px; letter-spacing: 2px; }
+
+  .status-bar {
+    background: #040a0c;
+    border-bottom: 1px solid #0f3028;
+    padding: 5px 16px;
+    display: flex;
+    gap: 24px;
+    font-size: 10px;
+    color: #2a5048;
+  }
+  .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #1dffa0;
+    margin-right: 5px;
+    animation: blink 2s ease-in-out infinite;
+    vertical-align: middle;
+  }
+  .dot.warn { background: #ffaa00; }
+  .dot.danger { background: #ff4040; animation: blink 0.6s ease-in-out infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .doc-body {
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: #3a6a5a;
+    text-transform: uppercase;
+    border-bottom: 1px solid #0f3028;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+  }
+  .panel {
+    background: #040e0c;
+    border: 1px solid #0f3028;
+    padding: 12px;
+    position: relative;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: #1dffa0;
+    opacity: 0.4;
+  }
+  .panel.warn::before { background: #ffaa00; }
+  .panel.danger::before { background: #ff4040; }
+  .panel.info::before { background: #00aaff; }
+  .panel-full { grid-column: 1 / -1; }
+
+  .data-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid #0a2020;
+    color: #6aaa90;
+    font-size: 10px;
+  }
+  .data-row:last-child { border-bottom: none; }
+  .val { color: #1dffa0; font-weight: bold; }
+  .val.warn { color: #ffaa00; }
+  .val.danger { color: #ff4040; }
+
+  .mol-display { text-align: center; padding: 12px 0 6px; }
+  .chem-formula {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: #1dffa0; letter-spacing: 2px;
+    display: block; margin-bottom: 4px;
+  }
+  .chem-sub { font-size: 10px; color: #3a6a5a; letter-spacing: 1px; }
+
+  .bar-container { margin: 4px 0; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 10px; color: #4a8a70; margin-bottom: 2px; }
+  .bar-track { height: 6px; background: #0a2020; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; background: #1dffa0; position: relative; }
+  .bar-fill.warn { background: #ffaa00; }
+  .bar-fill.danger { background: #ff4040; }
+  .bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 3px; background: white; opacity: 0.5;
+  }
+
+  .effect-tag {
+    display: inline-block;
+    background: #051a14;
+    border: 1px solid #0f3028;
+    color: #4a8a70;
+    font-size: 9px;
+    padding: 1px 6px;
+    margin: 2px 2px 2px 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .effect-tag.active { border-color: #1dffa0; color: #1dffa0; background: #031210; }
+  .effect-tag.warn { border-color: #ffaa00; color: #ffaa00; background: #141000; }
+  .effect-tag.danger { border-color: #ff4040; color: #ff4040; background: #140404; }
+
+  .risk-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
+  .risk-cell { background: #040e0c; border: 1px solid #0f3028; padding: 6px 4px; text-align: center; }
+  .risk-val { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #ffaa00; display: block; line-height: 1; }
+  .risk-val.danger { color: #ff4040; }
+  .risk-val.ok { color: #1dffa0; }
+  .risk-label { font-size: 9px; color: #3a6a5a; display: block; margin-top: 3px; letter-spacing: 0.5px; }
+
+  .timeline { position: relative; padding-left: 12px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 4px; bottom: 4px;
+    width: 1px; background: #0f3028;
+  }
+  .tl-entry { position: relative; margin-bottom: 8px; font-size: 10px; color: #4a8a70; }
+  .tl-entry::before {
+    content: '';
+    position: absolute;
+    left: -15px; top: 4px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #0f3028;
+    border: 1px solid #1dffa0;
+  }
+  .tl-entry.danger::before { border-color: #ff4040; }
+  .tl-entry.warn::before { border-color: #ffaa00; }
+  .tl-time { color: #1dffa0; font-size: 9px; letter-spacing: 1px; }
+  .tl-entry.danger .tl-time { color: #ff4040; }
+  .tl-entry.warn .tl-time { color: #ffaa00; }
+
+  .hexgrid { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .hexcell {
+    width: 28px; height: 28px;
+    background: #040e0c;
+    border: 1px solid #0f3028;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: #1dffa0;
+  }
+  .hexcell.active { background: #051a14; border-color: #1dffa0; }
+  .hexcell.suppressed { background: #100808; border-color: #2a0a0a; color: #3a1a1a; }
+  .hexcell.partial { background: #100e04; border-color: #3a2a00; color: #998830; }
+
+  .comp-chart { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 8px; align-items: center; margin-top: 6px; }
+  .comp-label { font-size: 9px; color: #4a8a70; white-space: nowrap; }
+  .comp-bar-wrap { height: 8px; background: #0a2020; }
+  .comp-bar-inner { height: 100%; }
+  .comp-val { font-size: 9px; color: #1dffa0; white-space: nowrap; }
+  .comp-val.danger { color: #ff4040; }
+  .comp-val.warn { color: #ffaa00; }
+
+  .classified-stamp {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 44px; font-weight: 700;
+    color: #ff4040; opacity: 0.04;
+    letter-spacing: 8px; text-transform: uppercase;
+    pointer-events: none; white-space: nowrap;
+  }
+
+  .footer-bar {
+    background: #040a0c;
+    border-top: 1px solid #0f3028;
+    padding: 7px 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px; color: #2a5048; letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 600px) {
+    .doc-body { grid-template-columns: 1fr; }
+    .panel-full { grid-column: 1; }
+    .footer-bar { flex-direction: column; gap: 4px; }
+    .risk-grid { grid-template-columns: repeat(2, 1fr); }
+    .header-bar { flex-direction: column; gap: 8px; text-align: center; }
+    .header-meta { text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="bnidoc">
+  <div class="scan-line"></div>
+  <div class="classified-stamp">RESTREINT</div>
+
+  <div class="header-bar">
+    <div>
+      <div class="header-logo">BNI<span>///</span>LAB</div>
+      <div style="font-size:9px;color:#2a5048;letter-spacing:2px;margin-top:2px;">BUREAU DE NEUROPHARMACOLOGIE INDÉPENDANT</div>
+    </div>
+    <div class="header-meta">
+      <div class="stamp">⬛ USAGE RESTREINT</div>
+      <div>RAPPORT NZM-2035 / REF#77-ALPHA</div>
+      <div>MARS 2035 — DOSSIER : ATELIS/NZM</div>
+      <div>ANALYSE TOXICOLOGIQUE &amp; PHARMACOLOGIQUE</div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div><span class="dot"></span>PROTOCOLE ACTIF</div>
+    <div><span class="dot warn"></span>ACCUMULATION DÉTECTÉE</div>
+    <div><span class="dot danger"></span>DÉPENDANCE IRRÉVERSIBLE</div>
+    <div style="margin-left:auto;color:#1a3530;">SESSION: 03:47:12</div>
+  </div>
+
+  <div class="doc-body">
+
+    <div class="panel">
+      <div class="section-title">I. Identité du composé</div>
+      <div class="mol-display">
+        <span class="chem-formula">NZM</span>
+        <div class="chem-sub">NOZIPAM MODIFIÉ — HNP-7 SYNTHÉTISÉ</div>
+        <div style="margin-top:8px;font-size:9px;color:#3a6a5a;border:1px dashed #0f3028;padding:6px;display:inline-block;">
+          <div style="color:#1dffa0;margin-bottom:4px;">⬡ MARQUEUR MOLÉCULAIRE</div>
+          ATELIS INDUSTRIES — PROPRIÉTAIRE<br/>
+          VECTEURS NANO-PARTICULAIRES : EXCLUSIFS<br/>
+          NON RÉPLICABLE SANS TECH. ATELIS
+        </div>
+      </div>
+      <div class="data-row"><span>Classe</span><span class="val">BENZODIAZÉPINE SYNTHÉTIQUE</span></div>
+      <div class="data-row"><span>Agent actif</span><span class="val">HNP-7 MODIFIÉ</span></div>
+      <div class="data-row"><span>Vecteur</span><span class="val">NANO-LIPOSOMES BHE</span></div>
+      <div class="data-row"><span>Demi-vie</span><span class="val warn">48–72 HEURES</span></div>
+      <div class="data-row"><span>Demi-vie (classique)</span><span class="val" style="color:#3a6a5a;">24–36 H</span></div>
+      <div class="data-row"><span>Forme</span><span class="val">ORAL / NANO-PATCH</span></div>
+      <div class="data-row"><span>Fabricant</span><span class="val warn">ATELIS INDUSTRIES</span></div>
+    </div>
+
+    <div class="panel info">
+      <div class="section-title">II. Mécanisme d'action</div>
+      <div style="color:#3a6a5a;font-size:10px;margin-bottom:8px;">CIBLES SYNAPTIQUES ACTIVES :</div>
+
+      <div style="margin-bottom:10px;">
+        <div class="bar-label"><span>↳ VOIES LIMBIQUES (dopamine / sérotonine)</span><span class="val warn">ACTIF</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:85%;background:#00aaff;"></div></div>
+        <div style="font-size:9px;color:#2a5048;margin-top:2px;">Suppression progressive des souvenirs lointains — froideur affective</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div class="bar-label"><span>↳ HIPPOCAMPE / AMYGDALE</span><span class="val warn">ACTIF</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:70%;background:#00ccaa;"></div></div>
+        <div style="font-size:9px;color:#2a5048;margin-top:2px;">Inhibition consolidation mémoire émotionnelle — effacement sélectif</div>
+      </div>
+      <div style="margin-bottom:6px;">
+        <div class="bar-label"><span>↳ CORTEX PRÉFRONTAL</span><span class="val warn">ALTÉRÉ</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:55%;background:#ffaa00;"></div></div>
+        <div style="font-size:9px;color:#2a5048;margin-top:2px;">Atténuation libre arbitre — automatisation comportementale accrue</div>
+      </div>
+
+      <div style="margin-top:8px;border-top:1px solid #0f3028;padding-top:6px;">
+        <div style="font-size:9px;color:#3a6a5a;margin-bottom:4px;">DÉSIGNATION INTERNE BNI :</div>
+        <div style="font-family:'Rajdhani',sans-serif;color:#1dffa0;font-size:13px;font-weight:600;letter-spacing:2px;">
+          « LISSAGE CHIMIQUE RÉGULÉ »
+        </div>
+        <div style="font-size:9px;color:#2a5048;margin-top:2px;">
+          ≠ "antidépresseur nouvelle génération" (présentation Atelis)
+        </div>
+      </div>
+    </div>
+
+    <div class="panel warn">
+      <div class="section-title">III. Effets constatés — profil cognitif</div>
+      <div style="font-size:9px;color:#3a6a5a;margin-bottom:4px;">ÉTAT CÉRÉBRAL / 2–4 SEMAINES :</div>
+      <div class="hexgrid">
+        <div class="hexcell active">RATn</div>
+        <div class="hexcell active">MÉM</div>
+        <div class="hexcell partial">EMO</div>
+        <div class="hexcell partial">VOL</div>
+        <div class="hexcell suppressed">AFF</div>
+        <div class="hexcell suppressed">IMP</div>
+        <div class="hexcell suppressed">MEM²</div>
+        <div class="hexcell suppressed">EMP</div>
+        <div class="hexcell active">LOC</div>
+        <div class="hexcell active">MOT</div>
+        <div class="hexcell partial">DÉC</div>
+        <div class="hexcell suppressed">SOC</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;font-size:8px;">
+        <span><span style="color:#1dffa0;">■</span> Fonctionnel</span>
+        <span><span style="color:#998830;">■</span> Altéré</span>
+        <span><span style="color:#3a1a1a;">■</span> Supprimé</span>
+      </div>
+      <div style="margin-top:10px;">
+        <div class="bar-label"><span>Suppression mémoire affective</span><span class="val warn">60–70%</span></div>
+        <div class="bar-track"><div class="bar-fill warn" style="width:65%;"></div></div>
+      </div>
+      <div style="margin-top:4px;">
+        <div class="bar-label"><span>Préservation rationalité opérationnelle</span><span class="val ok" style="color:#1dffa0;">~80%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:80%;"></div></div>
+      </div>
+    </div>
+
+    <div class="panel danger">
+      <div class="section-title">IV. Risques à long terme</div>
+      <div class="risk-grid">
+        <div class="risk-cell"><span class="risk-val">48H</span><span class="risk-label">Demi-vie NZM</span></div>
+        <div class="risk-cell"><span class="risk-val warn">2 sem</span><span class="risk-label">Dépendance établie</span></div>
+        <div class="risk-cell"><span class="risk-val danger">90%</span><span class="risk-label">Affect / 2 mois</span></div>
+        <div class="risk-cell"><span class="risk-val danger">IRR</span><span class="risk-label">Réversibilité</span></div>
+      </div>
+      <div style="margin-top:10px;">
+        <div class="timeline">
+          <div class="tl-entry">
+            <div class="tl-time">SEMAINE 0–1</div>
+            <div>Stabilisation neurochimique — effets désirés actifs</div>
+          </div>
+          <div class="tl-entry warn">
+            <div class="tl-time">SEMAINE 1–4</div>
+            <div>Accumulation résiduelle — dépendance physiologique</div>
+          </div>
+          <div class="tl-entry warn">
+            <div class="tl-time">MOIS 1–2</div>
+            <div>Effacement traits de personnalité — conformité accrue</div>
+          </div>
+          <div class="tl-entry danger">
+            <div class="tl-time">INTERRUPTION</div>
+            <div>REBOND MNÉSIQUE — SURCHARGE ÉMOTIONNELLE — CRISE NEUROLOGIQUE</div>
+          </div>
+          <div class="tl-entry danger">
+            <div class="tl-time">LONG TERME</div>
+            <div>État de "conformité neurochimique" — irréversible</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-full panel" style="border-left:none;padding-left:12px;">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:#ff4040;opacity:0.5;"></div>
+      <div class="section-title">V. Comparatif NZM vs. Nozipam — Implications éthiques</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-size:9px;color:#3a6a5a;margin-bottom:6px;">PROFIL COMPARATIF :</div>
+          <div class="comp-chart">
+            <div class="comp-label">Stabilité</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-inner" style="width:90%;background:#1dffa0;"></div></div>
+            <div class="comp-val">NZM +</div>
+
+            <div class="comp-label">Demi-vie</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-inner" style="width:80%;background:#00aaff;"></div></div>
+            <div class="comp-val">48–72H</div>
+
+            <div class="comp-label">Contrôle dose</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-inner" style="width:85%;background:#1dffa0;"></div></div>
+            <div class="comp-val">ÉLEVÉ</div>
+
+            <div class="comp-label">Dépendance</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-inner" style="width:95%;background:#ff4040;"></div></div>
+            <div class="comp-val danger">IRRÉVERS.</div>
+
+            <div class="comp-label">Effacement affect</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-inner" style="width:90%;background:#ffaa00;"></div></div>
+            <div class="comp-val warn">90%</div>
+
+            <div class="comp-label">Réversibilité</div>
+            <div class="comp-bar-wrap"><div class="comp-bar-inner" style="width:8%;background:#ff4040;"></div></div>
+            <div class="comp-val danger">NULLE</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:#3a6a5a;margin-bottom:6px;">STATUT ÉTHIQUE :</div>
+          <div style="background:#080404;border:1px solid #2a0a0a;padding:8px;margin-bottom:6px;">
+            <div style="color:#ff4040;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;margin-bottom:4px;">⚠ AGENT DE CONTRÔLE</div>
+            <div style="font-size:9px;color:#6a3030;line-height:1.6;">
+              Le NZM n'est PAS un traitement médical.<br/>
+              Classification BNI : AGENT DE LISSAGE CHIMIQUE RÉGULÉ.<br/>
+              Le patient est techniquement dépendant d'une entité<br/>
+              corporative pour sa stabilité neurochimique.
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;">
+            <span class="effect-tag active">Stabilise condition artificielle</span>
+            <span class="effect-tag active">Suppression cognitive</span>
+            <span class="effect-tag danger">Dépendance corp.</span>
+            <span class="effect-tag danger">Non-traitement</span>
+            <span class="effect-tag warn">IP moléculaire Atelis</span>
+            <span class="effect-tag warn">Non-réplicable</span>
+          </div>
+          <div style="margin-top:8px;font-size:9px;color:#2a5048;border-top:1px solid #0f3028;padding-top:6px;">
+            REC. BNI : maintien sous surveillance — interruption DANGEREUSE<br/>
+            Suivi neurochimique indépendant recommandé / 2 mois
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-bar">
+    <div>BNI — RAPPORT CONFIDENTIEL #NZM-77A — MARS 2035</div>
+    <div>ANALYSTE : SYSTEME-7 // VALIDATION HUMAINE REQUISE</div>
+    <div>NE PAS DISTRIBUER SANS AUTORISATION NIVEAU B+</div>
+  </div>
+</div>
+</body>
+</html>
